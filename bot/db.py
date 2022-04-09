@@ -212,3 +212,34 @@ class Database:
                     else:
                         stat['dislikes'] += 1
         return stat
+
+    async def get_public_stat(self) -> Dict[str, int]:
+        '''Возвращает суммарное кол-во лайков/дизлайков.
+
+        Returns:
+            Dict[str, int]: Статистика вида {'likes': int, 'dislikes': int}
+        '''
+        stat = {'likes': 0, 'dislikes': 0}
+        async with aiosqlite.connect(self.db_name) as db:
+            db.row_factory = aiosqlite.Row
+            async with db.execute('SELECT * FROM users_likes') as cur:
+                async for row in cur:
+                    if row['like']:
+                        stat['likes'] += 1
+                    else:
+                        stat['dislikes'] += 1
+        return stat
+
+    async def get_top_9_memes(self) -> list:
+        '''Возвращает топ 9 самых залайкненных мемов.
+
+        Returns:
+            list: Список мемов.
+        '''
+        memes = []
+        async with aiosqlite.connect(self.db_name) as db:
+            db.row_factory = aiosqlite.Row
+            async with db.execute('SELECT * FROM memes ORDER BY likes DESC LIMIT 9') as cur:
+                async for row in cur:
+                    memes.append(dict(row))
+        return memes

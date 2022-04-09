@@ -99,6 +99,16 @@ async def set_meme_dislike(msg: Message):
 
 
 @bl.message(FuncRule(lambda msg: msg.text.lower() == 'статистика'))
-async def private_stat(msg: Message):
-    stat = await db.get_private_stat(msg.peer_id)
-    await msg.answer(f'Ты поставил {stat["likes"]} 👍 и {stat["dislikes"]} 👎')
+async def stat(msg: Message):
+    privstat = await db.get_private_stat(msg.peer_id)
+    pubstat = await db.get_public_stat()
+    top_9 = await db.get_top_9_memes()
+    wait_msg = await msg.answer('Загружаем статистику...')
+    cnt1 = f'Пользователями было всего пославлено {pubstat["likes"]} 👍 и {pubstat["dislikes"]} 👎\n'
+    cnt1 += f'Ты поставил {privstat["likes"]} 👍 и {privstat["dislikes"]} 👎'
+    for meme in top_9:
+        if not meme.get('uri'):
+            top_9[top_9.index(meme)]['uri'] = await pmu.upload(meme['photo'])
+    await api.request('messages.delete', {'message_ids': wait_msg.message_id, 'delete_for_all': 1})
+    await msg.answer(cnt1)
+    await msg.answer('Топ 9 залайкленных мемов!', attachment=','.join([meme['uri'] for meme in top_9]))
