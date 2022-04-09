@@ -10,7 +10,7 @@ from io import BytesIO
 
 from vkbottle.bot import BotLabeler, Message
 from vkbottle import API, PhotoMessageUploader
-from vkbottle.dispatch.rules.base import FuncRule
+from vkbottle.dispatch.rules.base import FuncRule, AttachmentTypeRule
 from vkbottle import Keyboard, KeyboardButtonColor, Text
 
 from ..db import Database
@@ -112,3 +112,11 @@ async def stat(msg: Message):
     await api.request('messages.delete', {'message_ids': wait_msg.message_id, 'delete_for_all': 1})
     await msg.answer(cnt1)
     await msg.answer('Топ 9 залайкленных мемов!', attachment=','.join([meme['uri'] for meme in top_9]))
+
+
+@bl.message(AttachmentTypeRule('photo'))
+async def upload_meme(msg: Message):
+    for att in msg.attachments:
+        uri = f'photo{att.photo.owner_id}_{att.photo.id}_{att.photo.access_key}'
+        await db.add_photo(uri=uri)
+    await msg.answer('Спасибо за пополнение коллекции мемов!')
