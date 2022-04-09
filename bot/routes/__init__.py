@@ -3,8 +3,9 @@
 #  SkachSSBot - Routes.
 #  Created by Sergey Skachkov at 9/4/22
 #
-from . import greetings
+from . import greetings, questions
 
 labelers = [
-    greetings.bl
+    greetings.bl,
+    questions.bl
 ]
