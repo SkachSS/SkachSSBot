@@ -11,8 +11,8 @@ from vkbottle.bot import Bot
 from .routes import labelers
 
 
-DEBUG = False
-VERSION = '0.1'
+DEBUG = True
+VERSION = '0.2'
 TOKEN = os.environ.get('BOT_TOKEN', '')
 bot = Bot(TOKEN)
 
