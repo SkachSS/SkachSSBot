@@ -12,7 +12,7 @@ from .routes import labelers
 
 
 DEBUG = True
-VERSION = '0.5'
+VERSION = '1.0'
 TOKEN = os.environ.get('BOT_TOKEN', '')
 bot = Bot(TOKEN)
 
