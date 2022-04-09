@@ -23,7 +23,22 @@ pmu = PhotoMessageUploader(api)
 db = Database()
 
 
-@bl.message(FuncRule(lambda msg: msg.text.lower() == 'мем'))
+def get_start_key() -> str:
+    '''Возвращает стартовую клавиатуру.
+
+    Returns:
+        str: json vk bot keyboard in string.
+    '''
+    key = Keyboard(True)
+    key.add(Text('Мемы'), KeyboardButtonColor.POSITIVE)
+    key.row()
+    key.add(Text('Вопросы'), KeyboardButtonColor.PRIMARY)
+    key.row()
+    key.add(Text('Статистика'), KeyboardButtonColor.SECONDARY)
+    return key.get_json()
+
+
+@bl.message(FuncRule(lambda msg: 'мем' in msg.text.lower()))
 async def send_meme(msg: Message):
     await db._create_tables()
     meme_uids = await db.get_all_photo_uids()
@@ -66,10 +81,10 @@ async def send_meme(msg: Message):
         else:
             log.warning(f'Can\'t found meme for user #{msg.peer_id}!')
             await api.request('messages.delete', {'message_ids': f'{wait_msg.message_id}', 'delete_for_all': 1})
-            await msg.answer('Прости, мемы на сегодня закончились 😞')
+            await msg.answer('Прости, мемы на сегодня закончились 😞', keyboard=get_start_key())
     else:
         log.warning('No memes in DB.')
-        await msg.answer('Прости, мемы на сегодня закончились 😞')
+        await msg.answer('Прости, мемы на сегодня закончились 😞', keyboard=get_start_key())
 
 
 @bl.message(payload_map=[('set_meme_like', int)])
@@ -79,7 +94,7 @@ async def set_meme_like(msg: Message):
     if meme:
         await db.add_photo_like(meme_uid)
         await db.add_user_action_for_photo(meme_uid, msg.peer_id, True)
-        await msg.answer('Вы поставили лайк 👍!')
+        await msg.answer('Вы поставили лайк 👍!', keyboard=get_start_key())
     else:
         log.error(f'Can\'t found meme #{meme_uid}!')
         await msg.answer('⚠️ Странная ошибка!\n\nОтпиши создателю https://vk.com/0x403.')
@@ -92,7 +107,7 @@ async def set_meme_dislike(msg: Message):
     if meme:
         await db.add_photo_dislike(meme_uid)
         await db.add_user_action_for_photo(meme_uid, msg.peer_id, False)
-        await msg.answer('Вы поставили дизлайк 👎!')
+        await msg.answer('Вы поставили дизлайк 👎!', keyboard=get_start_key())
     else:
         log.error(f'Can\'t found meme #{meme_uid}!')
         await msg.answer('⚠️ Странная ошибка!\n\nОтпиши создателю https://vk.com/0x403.')
@@ -111,7 +126,10 @@ async def stat(msg: Message):
             top_9[top_9.index(meme)]['uri'] = await pmu.upload(meme['photo'])
     await api.request('messages.delete', {'message_ids': wait_msg.message_id, 'delete_for_all': 1})
     await msg.answer(cnt1)
-    await msg.answer('Топ 9 залайкленных мемов!', attachment=','.join([meme['uri'] for meme in top_9]))
+    await msg.answer(
+        'Топ 9 залайкленных мемов!',
+        attachment=','.join([meme['uri'] for meme in top_9]),
+        keyboard=get_start_key())
 
 
 @bl.message(AttachmentTypeRule('photo'))
@@ -119,4 +137,4 @@ async def upload_meme(msg: Message):
     for att in msg.attachments:
         uri = f'photo{att.photo.owner_id}_{att.photo.id}_{att.photo.access_key}'
         await db.add_photo(uri=uri)
-    await msg.answer('Спасибо за пополнение коллекции мемов!')
+    await msg.answer('Спасибо за пополнение коллекции мемов!', keyboard=get_start_key())

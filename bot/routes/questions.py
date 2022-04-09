@@ -4,33 +4,38 @@
 #  Created by Sergey Skachkov at 9/4/22
 #
 from vkbottle.bot import BotLabeler, Message
-from vkbottle.dispatch import BuiltinStateDispenser
-from vkbottle.dispatch.rules.base import (CommandRule, PayloadRule)
-from vkbottle import BaseStateGroup, Keyboard, KeyboardButtonColor, Text, Location
+from vkbottle.dispatch.rules.base import (CommandRule, PayloadRule, FuncRule)
+from vkbottle import Keyboard, KeyboardButtonColor, Text, Location
 
 
 bl = BotLabeler()
-st = BuiltinStateDispenser()
 
 
-class QuizStates(BaseStateGroup):
-    SKY_COLOR = 0  # Какого цвета небо?
-    WHAT_IS_SENSE = 1  # Что определяет сознание?
-    SPRUCE_COLOR = 2  # Какого цвета Ёлка?
-    WHAT_IS_AMPER = 3  # Что такое Ампер?
-    MARS_COLOR = 4  # Какого цвета планета Марс?
-    CATS_OR_DOGS = 5  # Кошки или собаки?
-    LIKE_OSCAR = 6  # Понравился Оскар 2022 года?
-    LOCATION = 7  # Запрос местоположения.
+def get_start_key() -> str:
+    '''Возвращает стартовую клавиатуру.
+
+    Returns:
+        str: json vk bot keyboard in string.
+    '''
+    key = Keyboard(True)
+    key.add(Text('Мемы'), KeyboardButtonColor.POSITIVE)
+    key.row()
+    key.add(Text('Вопросы'), KeyboardButtonColor.PRIMARY)
+    key.row()
+    key.add(Text('Статистика'), KeyboardButtonColor.SECONDARY)
+    return key.get_json()
 
 
 @bl.message(CommandRule('quiz_over', ['/']))
 @bl.message(PayloadRule({'cmd': 'quiz_over'}))
 async def quiz_over(msg: Message):
-    await msg.answer('Хорошо, но если захотите ещё раз попробывать, используйте команду /quiz')
+    await msg.answer(
+        'Хорошо, но если захотите ещё раз попробывать, используйте команду /quiz',
+        keyboard=get_start_key())
 
 
 @bl.message(CommandRule('quiz', ['/']))
+@bl.message(FuncRule(lambda msg: msg.text.lower() == 'вопросы'))
 async def start_quiz(msg: Message):
     key = Keyboard(True)
     key.add(
@@ -219,4 +224,4 @@ async def share_location(msg: Message):
 async def quiz_end(msg: Message):
     choice = msg.get_payload_json()['share_location']
     answer_is = 'Спасибо за местоположение!' if choice == 'yes' else 'Ну и ладно((('
-    await msg.answer(answer_is)
+    await msg.answer(answer_is, keyboard=get_start_key())
