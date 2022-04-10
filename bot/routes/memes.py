@@ -116,10 +116,10 @@ async def set_meme_dislike(msg: Message):
 
 @bl.message(FuncRule(lambda msg: msg.text.lower() == 'статистика'))
 async def stat(msg: Message):
+    wait_msg = await msg.answer('Загружаем статистику...')
     privstat = await db.get_private_stat(msg.peer_id)
     pubstat = await db.get_public_stat()
     top_9 = await db.get_top_9_memes()
-    wait_msg = await msg.answer('Загружаем статистику...')
     cnt1 = f'Пользователями было всего поставлено {pubstat["likes"]} 👍 и {pubstat["dislikes"]} 👎\n'
     cnt1 += f'Ты поставил {privstat["likes"]} 👍 и {privstat["dislikes"]} 👎'
     for meme in top_9:
