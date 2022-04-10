@@ -51,7 +51,6 @@ async def start_quiz(msg: Message):
     key.add(
         Text('Хватит вопросов', {'cmd': 'quiz_over'}),
         KeyboardButtonColor.SECONDARY)
-    msg.answer()
     await msg.answer(
         'Давай я задам тебе пару вопросов!\nИспользуй клавиатуру для ответа.\n\n[1/8] - Какого цвета небо?',
         keyboard=key.get_json())

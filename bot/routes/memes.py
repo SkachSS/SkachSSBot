@@ -4,6 +4,7 @@
 #  Created by Sergey Skachkov at 9/4/22
 #
 import os
+import sys
 import random
 import logging
 from io import BytesIO
@@ -119,12 +120,16 @@ async def stat(msg: Message):
     pubstat = await db.get_public_stat()
     top_9 = await db.get_top_9_memes()
     wait_msg = await msg.answer('Загружаем статистику...')
-    cnt1 = f'Пользователями было всего пославлено {pubstat["likes"]} 👍 и {pubstat["dislikes"]} 👎\n'
+    cnt1 = f'Пользователями было всего поставлено {pubstat["likes"]} 👍 и {pubstat["dislikes"]} 👎\n'
     cnt1 += f'Ты поставил {privstat["likes"]} 👍 и {privstat["dislikes"]} 👎'
     for meme in top_9:
         if not meme.get('uri'):
             top_9[top_9.index(meme)]['uri'] = await pmu.upload(meme['photo'])
-    await api.request('messages.delete', {'message_ids': wait_msg.message_id, 'delete_for_all': 1})
+    try:
+        await api.request('messages.delete', {'message_ids': wait_msg.message_id, 'delete_for_all': 1})
+    except Exception:
+        # Иногда, по какой-то причине, выпадает ошибка о том что смс не найдено.
+        log.exception(f'Can\'t found message_id #{wait_msg.message_id}.', exc_info=sys.exc_info())
     await msg.answer(cnt1)
     await msg.answer(
         'Топ 9 залайкленных мемов!',
