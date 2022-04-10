@@ -42,46 +42,27 @@ def get_start_key() -> str:
 @bl.message(FuncRule(lambda msg: 'мем' in msg.text.lower()))
 async def send_meme(msg: Message):
     await db._create_tables()
-    meme_uids = await db.get_all_photo_uids()
+    meme_uids = await db.get_unviewed_memes_for_user(msg.peer_id)
     if meme_uids:
-        meme_uid = 0
-        wait_msg = await msg.answer('Подбираем мем...')
-        while True:  # Я думаю это можно сделать лучше, к примеру правильным SQL запросом, но я не знаю его на столько хорошо...
-            if len(meme_uids) == 0:
-                break
-            uid = random.choice(meme_uids)
-            if not (await db.is_user_like_photo(uid, msg.peer_id)):
-                meme_uid = uid
-                break
-            del(meme_uids[meme_uids.index(uid)])
-            continue
-        if meme_uid:
-            meme = await db.get_photo(meme_uid)
-            if meme:
-                key = Keyboard(True)
-                key.add(
-                    Text('👍', {'set_meme_like': meme_uid}),
-                    KeyboardButtonColor.POSITIVE)
-                key.add(
-                    Text('👎', {'set_meme_dislike': meme_uid}),
-                    KeyboardButtonColor.NEGATIVE)
-                if meme.get('uri', ''):
-                    meme_uri = meme['uri']
-                else:
-                    meme_uri = (await pmu.upload(BytesIO(meme['photo'])))
-                    await db.add_photo_uri(meme_uid, meme_uri)
-                await api.request('messages.delete', {'message_ids': f'{wait_msg.message_id}', 'delete_for_all': 1})
-                await msg.answer(
-                    'Лови мем! 😃\n\nНе забудь поставить лайк/дизлайк!',
-                    meme_uri, keyboard=key)
+        meme = random.choice(meme_uids)
+        if meme:
+            key = Keyboard(True)
+            key.add(
+                Text('👍', {'set_meme_like': meme['uid']}),
+                KeyboardButtonColor.POSITIVE)
+            key.add(
+                Text('👎', {'set_meme_dislike': meme['uid']}),
+                KeyboardButtonColor.NEGATIVE)
+            if meme.get('uri', ''):
+                meme_uri = meme['uri']
             else:
-                # Я не знаю как ты попал в эту часть кода...
-                log.error('Unexpected error! Can\'t found meme in DB, but found meme_uid in DB!')
-                await api.request('messages.delete', {'message_ids': f'{wait_msg.message_id}', 'delete_for_all': 1})
-                await msg.answer('⚠️ Странная ошибка!\n\nОтпиши создателю https://vk.com/0x403.')
+                meme_uri = (await pmu.upload(BytesIO(meme['photo'])))
+                await db.add_photo_uri(meme['uid'], meme_uri)
+            await msg.answer(
+                'Лови мем! 😃\n\nНе забудь поставить лайк/дизлайк!',
+                meme_uri, keyboard=key)
         else:
             log.warning(f'Can\'t found meme for user #{msg.peer_id}!')
-            await api.request('messages.delete', {'message_ids': f'{wait_msg.message_id}', 'delete_for_all': 1})
             await msg.answer('Прости, мемы на сегодня закончились 😞', keyboard=get_start_key())
     else:
         log.warning('No memes in DB.')

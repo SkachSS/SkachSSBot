@@ -163,6 +163,22 @@ class Database:
                     memes.append(row[0])
         return memes
 
+    async def get_unviewed_memes_for_user(self, user_id: int) -> list:
+        '''Возвращает список мемов, которые не видел пользователь с user_id.
+
+        Args:
+            user_id (int): VK user_id.
+
+        Returns:
+            list: Список мемов.
+        '''
+        self.log.debug(f'Called with args ({user_id})')
+        sql = 'SELECT * FROM memes WHERE uid NOT IN (SELECT meme_uid FROM users_likes WHERE user_id=?)'
+        async with aiosqlite.connect(self.db_name) as db:
+            db.row_factory = aiosqlite.Row
+            async with db.execute(sql, (user_id,)) as cur:
+                return [dict(r) for r in (await cur.fetchall())]
+
     async def get_private_stat(self, user_id: int) -> Dict[str, int]:
         '''Возвращает статистику лайков/дизлайков пользователя.
 
