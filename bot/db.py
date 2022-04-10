@@ -133,36 +133,6 @@ class Database:
             await db.commit()
         return True
 
-    async def is_user_like_photo(self, uid: int, user_id: int) -> bool:
-        '''Пользователь лайкал/дизлайкал мем?
-
-        Args:
-            uid (int): UID мема.
-            user_id (int): VK user_id.
-
-        Returns:
-            bool: Булевое значение.
-        '''
-        self.log.debug(f'Called with args ({uid}, {user_id})')
-        async with aiosqlite.connect(self.db_name) as db:
-            async with db.execute('SELECT * FROM users_likes WHERE meme_uid=? AND user_id=?', (uid, user_id)) as cur:
-                fetch = await cur.fetchone()
-                return bool(fetch)
-
-    async def get_all_photo_uids(self) -> list:
-        '''Возвращает UID'ы мемов из БД.
-
-        Returns:
-            list: Список UID мемов.
-        '''
-        self.log.debug('Called.')
-        memes = []
-        async with aiosqlite.connect(self.db_name) as db:
-            async with db.execute('SELECT uid FROM memes') as cur:
-                async for row in cur:
-                    memes.append(row[0])
-        return memes
-
     async def get_unviewed_memes_for_user(self, user_id: int) -> list:
         '''Возвращает список мемов, которые не видел пользователь с user_id.
 

@@ -61,7 +61,7 @@ async def send_meme(msg: Message):
             'Лови мем! 😃\n\nНе забудь поставить лайк/дизлайк!',
             meme_uri, keyboard=key)
     else:
-        log.warning('No memes in DB.')
+        log.warning(f'Can\'t found meme for user #{msg.peer_id}')
         await msg.answer('Прости, мемы на сегодня закончились 😞', keyboard=get_start_key())
 
 
