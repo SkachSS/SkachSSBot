@@ -17,7 +17,7 @@ TOKEN = os.environ.get('BOT_TOKEN', '')
 bot = Bot(TOKEN)
 
 logging.basicConfig(
-    format='[%(levelname)s] %(name)s (%(lineno)d) >> %(funcName)s: %(message)s',
+    format='[%(asctime)s] [%(levelname)s] %(name)s (%(lineno)d) >> %(module)s.%(funcName)s: %(message)s',
     level=logging.DEBUG if DEBUG else logging.INFO)
 
 log = logging.getLogger('skachssbot')
