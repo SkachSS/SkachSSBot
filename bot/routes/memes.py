@@ -45,25 +45,21 @@ async def send_meme(msg: Message):
     meme_uids = await db.get_unviewed_memes_for_user(msg.peer_id)
     if meme_uids:
         meme = random.choice(meme_uids)
-        if meme:
-            key = Keyboard(True)
-            key.add(
-                Text('👍', {'set_meme_like': meme['uid']}),
-                KeyboardButtonColor.POSITIVE)
-            key.add(
-                Text('👎', {'set_meme_dislike': meme['uid']}),
-                KeyboardButtonColor.NEGATIVE)
-            if meme.get('uri', ''):
-                meme_uri = meme['uri']
-            else:
-                meme_uri = (await pmu.upload(BytesIO(meme['photo'])))
-                await db.add_photo_uri(meme['uid'], meme_uri)
-            await msg.answer(
-                'Лови мем! 😃\n\nНе забудь поставить лайк/дизлайк!',
-                meme_uri, keyboard=key)
+        key = Keyboard(True)
+        key.add(
+            Text('👍', {'set_meme_like': meme['uid']}),
+            KeyboardButtonColor.POSITIVE)
+        key.add(
+            Text('👎', {'set_meme_dislike': meme['uid']}),
+            KeyboardButtonColor.NEGATIVE)
+        if meme.get('uri', ''):
+            meme_uri = meme['uri']
         else:
-            log.warning(f'Can\'t found meme for user #{msg.peer_id}!')
-            await msg.answer('Прости, мемы на сегодня закончились 😞', keyboard=get_start_key())
+            meme_uri = (await pmu.upload(BytesIO(meme['photo'])))
+            await db.add_photo_uri(meme['uid'], meme_uri)
+        await msg.answer(
+            'Лови мем! 😃\n\nНе забудь поставить лайк/дизлайк!',
+            meme_uri, keyboard=key)
     else:
         log.warning('No memes in DB.')
         await msg.answer('Прости, мемы на сегодня закончились 😞', keyboard=get_start_key())
