@@ -202,16 +202,13 @@ class Database:
         Returns:
             Dict[str, int]: Статистика вида {'likes': int, 'dislikes': int}
         '''
-        stat = {'likes': 0, 'dislikes': 0}
         async with aiosqlite.connect(self.db_name) as db:
             db.row_factory = aiosqlite.Row
-            async with db.execute('SELECT * FROM users_likes WHERE user_id=?', (user_id,)) as cur:
-                async for row in cur:
-                    if row['like']:
-                        stat['likes'] += 1
-                    else:
-                        stat['dislikes'] += 1
-        return stat
+            async with db.execute('SELECT sum(like) as likes, sum(dislike) as dislikes FROM users_likes WHERE user_id=?', (user_id,)) as cur:
+                fetch = await cur.fetchone()
+                if fetch:
+                    return dict(fetch)
+        return {'likes': 0, 'dislikes': 0}
 
     async def get_public_stat(self) -> Dict[str, int]:
         '''Возвращает суммарное кол-во лайков/дизлайков.
@@ -219,16 +216,13 @@ class Database:
         Returns:
             Dict[str, int]: Статистика вида {'likes': int, 'dislikes': int}
         '''
-        stat = {'likes': 0, 'dislikes': 0}
         async with aiosqlite.connect(self.db_name) as db:
             db.row_factory = aiosqlite.Row
-            async with db.execute('SELECT * FROM users_likes') as cur:
-                async for row in cur:
-                    if row['like']:
-                        stat['likes'] += 1
-                    else:
-                        stat['dislikes'] += 1
-        return stat
+            async with db.execute('SELECT sum(like) as likes, sum(dislike) as dislikes FROM users_likes') as cur:
+                fetch = await cur.fetchone()
+                if fetch:
+                    return dict(fetch)
+        return {'likes': 0, 'dislikes': 0}
 
     async def get_top_9_memes(self) -> list:
         '''Возвращает топ 9 самых залайкненных мемов.
