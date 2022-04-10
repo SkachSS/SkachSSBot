@@ -81,36 +81,6 @@ class Database:
             await db.commit()
         return True
 
-    async def remove_photo_like(self, uid: int) -> Literal[True]:
-        '''Убирает лайк с мема.
-
-        Args:
-            uid (int): UID мема.
-
-        Returns:
-            Literal[True]: Всегда True.
-        '''
-        self.log.debug(f'Called with args ({uid})')
-        async with aiosqlite.connect(self.db_name) as db:
-            await db.execute('UPDATE "memes" SET like=like-1 WHERE uid=?', (uid,))
-            await db.commit()
-        return True
-
-    async def remove_photo_dislike(self, uid: int) -> Literal[True]:
-        '''Убирает дизлайк с мема.
-
-        Args:
-            uid (int): UID мема.
-
-        Returns:
-            Literal[True]: Всегда True.
-        '''
-        self.log.debug(f'Called with args ({uid})')
-        async with aiosqlite.connect(self.db_name) as db:
-            await db.execute('UPDATE "memes" SET dislike=dislike-1 WHERE uid=?', (uid,))
-            await db.commit()
-        return True
-
     async def add_photo_uri(self, uid: int, uri: str) -> Literal[True]:
         '''Запоминаем URI мема загруженного в сообщество ВК. Побережём сервера ВК.
 
@@ -230,10 +200,7 @@ class Database:
         Returns:
             list: Список мемов.
         '''
-        memes = []
         async with aiosqlite.connect(self.db_name) as db:
             db.row_factory = aiosqlite.Row
             async with db.execute('SELECT * FROM memes ORDER BY likes DESC LIMIT 9') as cur:
-                async for row in cur:
-                    memes.append(dict(row))
-        return memes
+                return [dict(r) for r in (await cur.fetchall())]

@@ -132,7 +132,7 @@ async def stat(msg: Message):
         log.exception(f'Can\'t found message_id #{wait_msg.message_id}.', exc_info=sys.exc_info())
     await msg.answer(cnt1)
     await msg.answer(
-        'Топ 9 залайкленных мемов!',
+        'Топ 9 залайканных мемов!',
         attachment=','.join([meme['uri'] for meme in top_9]),
         keyboard=get_start_key())
 
